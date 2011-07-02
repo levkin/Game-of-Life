@@ -1,6 +1,6 @@
 {-#LANGUAGE RecordWildCards,NamedFieldPuns #-}
 
-module Gol.Generation where
+module GoL.Generation where
   import GoL.Definitions 
   import GoL.Backend.IF
   import Data.List
@@ -30,7 +30,7 @@ module Gol.Generation where
   births storage = cellChange where
     valList = map (\x-> (x,storage)) $ toList storage
     birthCands = snd $ (runState $ mapM_ findBirthCandidates valList) $ getEmptyStorage
-    cellChange =  map (toCellChange Alive) $ filter (\x -> (neighborCnt x) >= _birthNeigbourCnt) $ toList storage
+    cellChange =  map (toCellChange Alive) $ filter (\x -> (neighborCnt x) >= _birthNeigbourCnt) $ toList birthCands
            
   -- Update cellstate from list of changes 
   -- Either add new cells or remove existing
@@ -46,8 +46,8 @@ module Gol.Generation where
   findBirthCandidates (cell,cellSt)  = state $ resFunc where  
     resFunc :: CellStorage -> ((Cell,CellStorage),CellStorage)
     resFunc curr_birthCands = ((cell,cellSt),new_birthCands) where
-      nb = filter (\z-> notElem z cellSt) $ getNeighbors cellSt cell -- Fetch neighbors , that are not alive
-      new_birthCands = putCell curr_birthCands nb -- Put them to
+      nb = filter (\z-> notElem z cellSt) $ getNeighbors cellSt cell -- Fetch neighbors that are not alive
+      new_birthCands = putNeighbourCell curr_birthCands nb -- Put them to birth candidates
 
 
   findDeathCandidates :: (Cell,CellStorage) -> State (CellStorage) (Cell,CellStorage)
@@ -71,8 +71,16 @@ module Gol.Generation where
 
 
 
-  putCell :: CellStorage -> [Cell] -> CellStorage
-  putCell = undefined
+  -- If cell is already found in storage -> Increment it's neighbor count
+  -- Else insert it 
+  putNeighbourCell :: CellStorage -> [Cell] -> CellStorage
+  putNeighbourCell st cells = foldl' insert_tag st cells where
+    insert_tag :: CellStorage -> Cell -> CellStorage
+    insert_tag st cell  | cell `elem` st = my_insert new_st new_cell
+                        | otherwise = my_insert st cell where
+      new_st =  filter ( \x -> (coord x) /= coord cell) $ toList st -- Remove all occurrences with current coordinates
+      curr_cells =  filter ( \x -> (coord x) == coord cell) $ toList st -- Insert new single occurrence with updated neighbours count
+      new_cell = Cell { coord = coord cell,lifeCnt = lifeCnt cell,neighborCnt = (neighborCnt cell) + (length curr_cells)}
 
 
 
