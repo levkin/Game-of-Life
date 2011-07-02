@@ -1,6 +1,6 @@
 {-#LANGUAGE RecordWildCards,NamedFieldPuns #-}
 
-module Gol.Implementation where
+module Gol.Generation where
   import GoL.Definitions 
   import GoL.Backend.IF
   import Data.List
