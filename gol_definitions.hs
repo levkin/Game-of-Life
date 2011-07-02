@@ -10,6 +10,7 @@
 module GoL.Definitions where
 
   import Control.Monad
+  import Data.Ord
 
   ----------------------------------------------------
   --  Data types
@@ -17,7 +18,7 @@ module GoL.Definitions where
  
   type X_c = Int
   type Y_c = Int
-  type Coord = (X_c,Y_c)
+  type Coord = (X_c,Y_c) 
 
 
   data CellState = Alive | Dead deriving (Eq,Show)
@@ -28,6 +29,7 @@ module GoL.Definitions where
     lifeCnt :: Int
   } deriving (Show,Eq)
 
+  
   type CellChange = (CellState,Cell)
   
   type CellStorage = [Cell] -- This is temporaty definition
