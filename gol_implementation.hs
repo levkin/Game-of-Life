@@ -46,7 +46,8 @@ module GoL.Generation where
   findBirthCandidates (cell,cellSt)  = state $ resFunc where  
     resFunc :: CellStorage -> ((Cell,CellStorage),CellStorage)
     resFunc curr_birthCands = ((cell,cellSt),new_birthCands) where
-      nb = filter (\z-> notElem z cellSt) $ getNeighbors cellSt cell -- Fetch neighbors that are not alive
+      --nb = filter (\z-> notElem z cellSt) $ getNeighbors cellSt cell -- Fetch neighbors that are not alive
+      nb = filter (\z -> not $ any (\x-> (coord x == coord z)) $ toList cellSt) $ getNeighbors cellSt cell
       new_birthCands = putNeighbourCell curr_birthCands nb -- Put them to birth candidates
 
 
@@ -76,8 +77,9 @@ module GoL.Generation where
   putNeighbourCell :: CellStorage -> [Cell] -> CellStorage
   putNeighbourCell st cells = foldl' insert_tag st cells where
     insert_tag :: CellStorage -> Cell -> CellStorage
-    insert_tag st cell  | cell `elem` st = my_insert new_st new_cell
-                        | otherwise = my_insert st cell where
+    insert_tag st cell  | not $ any (\x-> (coord x == coord cell)) $ toList st = my_insert new_st new_cell
+                        | otherwise = my_insert st cell_upd where
+      cell_upd = Cell { coord = coord cell , lifeCnt = lifeCnt cell , neighborCnt = 1 }
       new_st =  filter ( \x -> (coord x) /= coord cell) $ toList st -- Remove all occurrences with current coordinates
       curr_cells =  filter ( \x -> (coord x) == coord cell) $ toList st -- Insert new single occurrence with updated neighbours count
       new_cell = Cell { coord = coord cell,lifeCnt = lifeCnt cell,neighborCnt = (neighborCnt cell) + (length curr_cells)}
