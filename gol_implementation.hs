@@ -54,7 +54,6 @@ module GoL.Generation where
   findBirthCandidates (cell,cellSt)  = state $ resFunc where  
     resFunc :: CellStorage -> ((Cell,CellStorage),CellStorage)
     resFunc curr_birthCands = ((cell,cellSt),new_birthCands) where
-      --nb = filter (\z->  z `notElemByCoord` cellSt) $ getNeighbors cellSt cell -- Fetch neighbors that are not alive
       nb =  getNeighbors cellSt cell -- Fetch neighbors that are not alive
       new_birthCands = putNeighbourCell curr_birthCands nb -- Put them to birth candidates
 
@@ -86,14 +85,15 @@ module GoL.Generation where
     
     new_cells = foldl' my_insert getEmptyStorage allNeighbors 
 
--- Debug_3333
-  allNeighbours st x1 y1 = filter (\x -> x `notElemByCoord`  st ) $ [ Cell { coord = (x,y),lifeCnt = _maxLifeCnt,neighborCnt = 0 } | x <- [(x1-1)..(x1+1)],x >= 0,x <= _maxX, 
-                                                                    y <- [(y1-1)..(y1+1)],y >= 0,y <= _maxY,not $ and [x == x1, y == y1]   ]
+---- Debug_3333
+--  allNeighbours st x1 y1 = filter (\x -> x `notElemByCoord`  st ) $ [ Cell { coord = (x,y),lifeCnt = _maxLifeCnt,neighborCnt = 0 } | x <- [(x1-1)..(x1+1)],x >= 0,x <= _maxX, 
+--                                                                    y <- [(y1-1)..(y1+1)],y >= 0,y <= _maxY,not $ and [x == x1, y == y1]   ]
+--
+--
+--  allNeighbours2  x1 y1 =  [ Cell { coord = (x,y),lifeCnt = _maxLifeCnt,neighborCnt = 0 } | x <- [(x1-1)..(x1+1)],x >= 0,x <= _maxX, 
+--                                                                    y <- [(y1-1)..(y1+1)],y >= 0,y <= _maxY,not $ and [x == x1, y == y1]   ]
+---- End Debug_3333
 
-
-  allNeighbours2  x1 y1 =  [ Cell { coord = (x,y),lifeCnt = _maxLifeCnt,neighborCnt = 0 } | x <- [(x1-1)..(x1+1)],x >= 0,x <= _maxX, 
-                                                                    y <- [(y1-1)..(y1+1)],y >= 0,y <= _maxY,not $ and [x == x1, y == y1]   ]
--- End Debug_3333
   -- If cell is already found in storage -> Increment it's neighbor count
   -- Else insert it 
   putNeighbourCell :: CellStorage -> [Cell] -> CellStorage
@@ -104,18 +104,24 @@ module GoL.Generation where
       cell_upd = Cell { coord = coord cell , lifeCnt = lifeCnt cell , neighborCnt = 1 }
 
       new_st = fromList $ filter ( \x -> (coord x) /= coord cell) $ toList st -- Remove all occurrences with current coordinates
-      curr_cells = fromList $ filter ( \x -> (coord x) == coord cell) $ toList st -- Insert new single occurrence with updated neighbours count
-      new_cell = Cell { coord = coord cell,lifeCnt = lifeCnt cell,neighborCnt = (neighborCnt cell) + (length curr_cells)}
+      curr_cells =  filter ( \x -> (coord x) == coord cell) $ toList st -- Insert new single occurrence with updated neighbours count
+      sum = foldl' sumN (neighborCnt cell) curr_cells
+      sumN x y = x + (neighborCnt y)
+      new_cell = Cell { coord = coord cell,lifeCnt = lifeCnt cell,neighborCnt = sum + 1}
 
 -- Debug_4444
+
   insert_tag1 :: CellStorage -> Cell -> CellStorage
   insert_tag1 st cell  | cell `elemByCoord` st = my_insert new_st new_cell
-                      | otherwise = my_insert st cell_upd where
+                       | otherwise = my_insert st cell_upd where
     cell_upd = Cell { coord = coord cell , lifeCnt = lifeCnt cell , neighborCnt = 1 }
 
     new_st = fromList $ filter ( \x -> (coord x) /= coord cell) $ toList st -- Remove all occurrences with current coordinates
-    curr_cells = fromList $ filter ( \x -> (coord x) == coord cell) $ toList st -- Insert new single occurrence with updated neighbours count
-    new_cell = Cell { coord = coord cell,lifeCnt = lifeCnt cell,neighborCnt = (neighborCnt cell) + (length curr_cells)}
+    curr_cells =  filter ( \x -> (coord x) == coord cell) $ toList st -- Insert new single occurrence with updated neighbours count
+    sum = foldl' sumN (neighborCnt cell) curr_cells
+    sumN x y = x + (neighborCnt y)
+    new_cell = Cell { coord = coord cell,lifeCnt = lifeCnt cell,neighborCnt = sum + 1}
+
 -- End Debug_4444
 
 
