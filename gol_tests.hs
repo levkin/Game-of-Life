@@ -59,10 +59,20 @@ genSomeNeighbours num c = result where
   anyN = elements [ Crd { crd = (x,y)} |  x <- [x_-1..x_+1], x > 0, y <- [y_-1..y_+1], y > 0 ,x <= _maxX, y <= _maxY , (x,y) /= (x_,y_)]
   result =  do 
       lst <- sequence $ replicate num anyN 
-      return nub lst -- Make list unique . 
+      return $ nub lst -- Make list unique . 
 
+-- Generate parents to
 reversedBirth :: CrdLst -> Gen CrdLst
-reversedBirth = undefined
-  
+reversedBirth lst = result where
+  lstSize = length $ crdLst lst -- size of list of neighbours
+  app f x = f x
+  app2 f x y = f x y
+  replGenSomeNLst = replicate lstSize genSomeNeighbours -- Build list of partial functions
+  result = do
+    let numNbr = elements [_birthNeigbourCnt..(_birthNeigbourCnt+2)] 
+    neighbrNumLst <- sequence $ replicate lstSize numNbr
+    lstCrdlst  <- sequence $ zipWith3 (app2)  replGenSomeNLst neighbrNumLst (crdLst lst)
+    let concLstCrdLst = nub $ concat lstCrdlst -- Unique inputs
+    return $ CrdLst { crdLst = concLstCrdLst }           
      
 
