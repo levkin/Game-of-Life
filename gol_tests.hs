@@ -46,6 +46,23 @@ instance Arbitrary CrdLst where
 -- Implement function performing reversed birth
 -- Since all generation is in scope of Gen monad . It will not return pure birth
 -- but rather lifted one
+-- Traverse list of expected results and generate minimum number of neighbours ,required for generation
+-- of new cells
+
+
+
+-- Get requested number of random neighbours
+-- Not too clean , since max value neighbours can be 8 and int is not proper type
+genSomeNeighbours :: Int -> Crd -> Gen [Crd]
+genSomeNeighbours num c = result where 
+  (x_,y_) = crd c
+  anyN = elements [ Crd { crd = (x,y)} |  x <- [x_-1..x_+1], x > 0, y <- [y_-1..y_+1], y > 0 ,x <= _maxX, y <= _maxY , (x,y) /= (x_,y_)]
+  result =  do 
+      lst <- sequence $ replicate num anyN 
+      return nub lst -- Make list unique . 
+
 reversedBirth :: CrdLst -> Gen CrdLst
 reversedBirth = undefined
+  
+     
 
