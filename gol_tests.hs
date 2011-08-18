@@ -30,6 +30,8 @@ instance Arbitrary Crd where
 -- Implement random list length
 newtype CrdLstLength = CrdLstLength { crdLstLength :: Int }
 
+
+
 instance Arbitrary CrdLstLength where
   arbitrary = elements [ CrdLstLength { crdLstLength = x } | x <- [0..((_maxY * _maxX) `div` 4)]]
 
@@ -62,10 +64,9 @@ genSomeNeighbours num c = result where
       return $ nub lst -- Make list unique . 
 
 -- Generate parents to
-reversedBirth :: CrdLst -> Gen CrdLst
+reversedBirth ::  CrdLst -> Gen CrdLst
 reversedBirth lst = result where
   lstSize = length $ crdLst lst -- size of list of neighbours
-  app f x = f x
   app2 f x y = f x y
   replGenSomeNLst = replicate lstSize genSomeNeighbours -- Build list of partial functions
   result = do
