@@ -13,7 +13,9 @@ module GoL.Backend.IF where
     -- Initializations .
     
     -- Basic initialization is size of grid
-    init :: Coord -> IO b -- Initialize with size of grid
+    -- Some attributes are not , such as file name , for example
+    -- Should be defined outside of b . TODO -- Convert to multi-parameter typeclass or type family
+    init :: b -> Coord -> IO b -- Initialize with size of grid
 
     -- Update state
     updateSt :: [CellChange] -> b -> IO b

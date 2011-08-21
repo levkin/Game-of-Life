@@ -10,6 +10,7 @@ module GoL.Game where
   -- I'd like to have game ... >>= game 
    
    -- Turn stream 
+   -- Will use turn generator for game check
   data Turn = Last | Continue Turn
 
   
@@ -18,12 +19,14 @@ module GoL.Game where
     backEnd :: a
   }
 
+  
 
   game :: (GoLBackend a) => Turn -> (GameState a) -> IO (GameState a)
   
   -- If this is last turn -> Don't do anything
   game Last st = return st 
 
+  -- If this continue turn -> Execute 
   game (Continue nxt_turn) state@(GameState storage be) = do
     let (changes,new_storage) = simulate_generation storage
     new_be <- updateSt changes be  

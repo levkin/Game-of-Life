@@ -19,6 +19,7 @@ module GoL.Backend.Txt where
   import System.IO
   import Data.List
   import Control.Monad
+  import GoL.Backend.IF
 
   ----------------------------------------------------
   --  Data Types 
@@ -26,18 +27,20 @@ module GoL.Backend.Txt where
   data GolTextBe = GolTextBe {
     generation :: !Int,
     array :: !B.ByteString,
-    dim :: !Coord -- Dimensions of grid
+    dim :: !Coord, -- Dimensions of grid
+    fileName :: !FilePath
+    -- Currently don't keep handle . Handle will be AD HOC , where file will be appended with each update
   } deriving (Eq)
 
   ----------------------------------------------------
   --  Functions
   ----------------------------------------------------
-  init :: Coord -> IO GolTextBe
-  init c@(x,y) = return $ fields where
-    fields = GolTextBe {..}
-    generation = 0 -- 
-    dim = c
-    array = B.pack $ replicate (x*y) ' ' -- Initial bytestring is array full of spaces
+--  init :: Coord -> IO GolTextBe
+--  init c@(x,y) = return $ fields where
+--    fields = GolTextBe {..}
+--    generation = 0 -- 
+--    dim = c
+--    array = B.pack $ replicate (x*y) ' ' -- Initial bytestring is array full of spaces
 
   -- Convert array in BE to bytestring that will show as Grid in text
   buildGrid :: GolTextBe -> B.ByteString
@@ -59,5 +62,37 @@ module GoL.Backend.Txt where
 
     nice_grid = B.concat $ map B.pack  $  (join [[x] ++ [y] | x <- (replicate y_dim v_sep) | y <- h_seped_lines]) ++ [v_sep_no_term]
 
+  -- Get list of expected cell changes and updated ByteString field
+  appChgBe :: GolTextBe -> CellChange -> GolTextBe
+  appChgBe be chg@(new_state,cell) = new_be where
+    sym = case new_state of 
+      Alive -> 'X'
+      Dead -> ' '
+    x_dim = (fst . dim) be
+    y_dim = (snd . dim) be
+    x_pos = (fst . coord) cell
+    y_pos = (snd . coord) cell
+    offset = (y_dim * y_pos + x_pos) 
+    last_entry = (x_dim * y_dim - 1)
+
+    new_array = case offset of 
+      0 -> B.concat [B.pack [sym],B.drop 1 $ array be]
+      last_entry -> B.concat [ B.take (offset - 1) $ array be, B.pack [sym] ]
+      otherwise -> B.concat [ B.take (offset - 1) $ array be, B.pack [sym] , B.drop  offset $ array be]
   
-    
+    new_be = GolTextBe {array = new_array,generation = generation be,dim = dim be,fileName = fileName be}
+
+  instance GoLBackend GolTextBe where  
+
+    --init :: GolTextBe -> Coord -> IO GolTextBe
+    init base_const c@(x,y) = return $ fields where
+      fields = GolTextBe {fileName = fileName base_const,..}
+      generation = 0 -- 
+      dim = c
+      array = B.pack $ replicate (x*y) ' ' -- Initial bytestring is array full of spaces
+     
+    updateSt chgLst be = result where 
+      next_be = foldl' appChgBe be chgLst
+      result = do
+        B.appendFile (fileName next_be) (buildGrid next_be)
+        return next_be
