@@ -18,7 +18,7 @@ module GoL.Definitions where
  
   type X_c = Int
   type Y_c = Int
-  type Coord = (X_c,Y_c) 
+  type Coord = (X_c,Y_c)
 
 
   data CellState = Alive | Dead deriving (Eq,Show)
@@ -29,7 +29,6 @@ module GoL.Definitions where
     lifeCnt :: Int
   } deriving (Show,Eq)
 
-  
   type CellChange = (CellState,Cell)
   
   type CellStorage = [Cell] -- This is temporaty definition
@@ -58,6 +57,11 @@ module GoL.Definitions where
 
   _maxY = 20
   _maxX = 20
+
+  _max_mutations :: Int -- Number on new mutations
+  _max_mutations = 3
+
+
 
   getEmptyStorage :: CellStorage
   getEmptyStorage = [] -- Temporary . List will be changed to intMap
