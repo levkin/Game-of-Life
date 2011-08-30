@@ -12,6 +12,9 @@ import Test.QuickCheck
 import Test.QuickCheck.Gen
 import GoL.Game
 import System.Random
+import GoL.Backend.IF
+import GoL.Backend.Txt
+import qualified Data.ByteString.Char8 as B
 
 ----------------------------------------------------------------
 toCellSt :: [Coord] -> CellStorage
@@ -156,15 +159,34 @@ turns = turns_ 10 where
 
 -- generate basic position
 -- It is based of birth property generations
+-- Seed -> List of coordinates
 gen_basic_position :: Int -> [Coord]
-  gen_basic_position seed = res_lst where 
-    res_lst = toCoordHelper crdLst
-    crd_lst :: CrdLst
-    flip unGen seed $ do
-      x <- arbitrary
-      crdLst <- reverseBirth x
-    
+gen_basic_position seed = res_lst where 
+  res_lst = toCoordHelper crd_lst
+  crd_lst :: CrdLst
+  gen_crd_lst :: Gen CrdLst
+  gen_crd_lst =  do
+    x <- arbitrary
+    y <- reversedBirth x
+    return y
+  crd_lst = unGen gen_crd_lst (mkStdGen 10) seed    
 
+-- Initial storage -- Check with seed 3
+initCellSt = toCellSt $ gen_basic_position 3
+
+initTestBe = GolTextBe {
+    generation = 0,
+    array = B.empty,
+    dim = (_maxX,_maxY),
+    fileName = "./gol_output_test.txt"
+    -- Currently don't keep handle . Handle will be AD HOC , where file will be appended with each update
+  } 
+
+-- Play 10 turns of game of life
+playGame = do
+  be <- GoL.Backend.IF.init initTestBe (_maxX,_maxY) 
+  let initGameSt = GameState initCellSt be 
+  game turns initGameSt   
 
 --------------------------------------------------
 -- End play game
