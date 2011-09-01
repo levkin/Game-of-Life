@@ -121,6 +121,9 @@ module GoL.Backend.Txt where
         
    
   appAllChgBe :: GolTextBe -> [CellChange] -> GolTextBe    
+
+  appAllChgBe be [] = GolTextBe { generation = generation be + 1,dim = dim be,fileName = fileName be,array = array be }
+
   appAllChgBe be chgLst = new_be where
 
     new_be = GolTextBe { generation = generation be + 1,dim = dim be,fileName = fileName be,array = new_array }
@@ -149,14 +152,22 @@ module GoL.Backend.Txt where
   instance GoLBackend GolTextBe where  
 
     --init :: GolTextBe -> Coord -> IO GolTextBe
-    init base_const c@(x,y) = return $ fields where
-      fields = GolTextBe {fileName = fileName base_const,..}
+    init base_const c@(x,y) = result where
+      fields = GolTextBe {fileName = fileName_,..}
+      fileName_ = fileName base_const
       generation = 0 -- 
       dim = c
       array = B.pack $ replicate (x*y) ' ' -- Initial bytestring is array full of spaces
+      result = do
+        writeFile (fileName_) ""
+        return fields
      
     updateSt chgLst be = result where 
       next_be = appAllChgBe be chgLst
       result = do
+        appendFile (fileName next_be) $ "\nGeneration #" ++ (show $ generation be) ++ "\n"
+        appendFile (fileName next_be) "\nUpdate list is \n" 
+        appendFile (fileName next_be) $ ( show chgLst ) ++ "\n"
+        appendFile (fileName next_be) "\r\n"
         B.appendFile (fileName next_be) (buildGrid next_be)
         return next_be

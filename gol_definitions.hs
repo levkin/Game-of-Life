@@ -43,8 +43,12 @@ module GoL.Definitions where
   my_insert :: CellStorage -> Cell -> CellStorage
   my_insert xs x = x:xs
 
+
+  removeBy :: (Cell -> Cell -> Bool) -> CellStorage -> Cell -> CellStorage
+  removeBy f x y = filter ( \z -> f z y ) x
+
   remove :: CellStorage -> Cell -> CellStorage
-  remove x y = filter (\z -> z /= y) x
+  remove = removeBy (/=)
 
   _birthNeigbourCnt :: Int
   _birthNeigbourCnt = 3  

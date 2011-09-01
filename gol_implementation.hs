@@ -38,6 +38,9 @@ module GoL.Generation where
 
 -- End Debug_4444
 
+ -- Remove based on coordinates
+
+  
 
 
   -- Update cellstate from list of changes 
@@ -46,7 +49,9 @@ module GoL.Generation where
   update storage changes = newStorage where
     newStorage = foldl' processChange storage changes
     processChange st_ change@(ch,cell) | ch == Alive = my_insert st_ new_cell 
-                                       | otherwise = remove st_ cell where
+                                       | otherwise = removeBy eqCoord st_ cell where
+      eqCoord :: Cell -> Cell -> Bool
+      eqCoord x y = (coord x) /= (coord y)
       new_cell = Cell  { lifeCnt = _maxLifeCnt , coord = coord cell , neighborCnt = neighborCnt cell }
 
   --
