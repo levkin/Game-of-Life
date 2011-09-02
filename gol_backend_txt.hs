@@ -55,16 +55,19 @@ module GoL.Backend.Txt where
                  | otherwise = Just $ B.splitAt x_dim jj
 
     l_lngth = length lines
-    lines_with_linenum = [(show x) ++ y | x <- [1..l_lngth] | y <- lines]
+    lines_with_linenum = [(show x) ++ y | x <- [0..l_lngth-1] | y <- lines]
 
     h_sep = replicate x_dim '|' 
-    v_sep_no_term =  replicate (x_dim*2+1) '-' 
-    v_sep = v_sep_no_term ++ "\n"
-
     
     h_seped_lines = map (\ys -> join [[x]++[y] | x <- h_sep | y <- ys] ++ "|\n") lines  
+    h_seped_with_nums = [show x ++ "\t" ++ y | x <- [0..l_lngth-1] | y <- h_seped_lines]
 
-    nice_grid = B.concat $ map B.pack  $  (join [[x] ++ [y] | x <- (replicate y_dim v_sep) | y <- h_seped_lines]) ++ [v_sep_no_term]
+    v_sep_no_term =  replicate (x_dim*2+3) '-' 
+    v_sep = v_sep_no_term ++ "\n"
+    
+    intlvLines =  [[x] ++ [y] | x <- (replicate y_dim v_sep) | y <- h_seped_with_nums]
+
+    nice_grid = B.concat $ map B.pack  $  (join intlvLines) ++ [v_sep_no_term]
 
    
   -- Slice Bytestring to list of bytestring according to differential list 
@@ -76,13 +79,25 @@ module GoL.Backend.Txt where
   splitStr :: B.ByteString -> [Int]-> [B.ByteString]
       
   splitStr x lst =  (slc_') [] lst x where
-  slc_' :: [B.ByteString]->[Int]->B.ByteString->[B.ByteString]
-  slc_' acc [] next = acc ++ [next]
-  slc_' acc (x:xs) src | (B.null src) = acc
-                        | otherwise =  slc_' (acc++[curr]) xs  next where
-                          (curr,next) = B.splitAt x src
+    slc_' :: [B.ByteString]->[Int]->B.ByteString->[B.ByteString]
+    slc_' acc [] next = acc ++ [next]
+    slc_' acc (x:xs) src | (B.null src) = acc
+                          | otherwise =  slc_' (acc++[curr]) xs  next where
+                            (curr,next) = B.splitAt x src
 --------------------------------------------------
 
+-- This is essentially the same function as splitStr , except pivot cell  is dropped
+
+--------------------------------------------------
+  splitStrNoPivot :: B.ByteString -> [Int]-> [B.ByteString]
+      
+  splitStrNoPivot x lst =  (slc_') [] lst x where
+    slc_' :: [B.ByteString]->[Int]->B.ByteString->[B.ByteString]
+    slc_' acc [] next = acc ++ [next]
+    slc_' acc (x:xs) src | (B.null src) = acc
+                          | otherwise =  slc_' (acc++[B.take (x-1) curr]) xs  next where
+                            (curr,next) = B.splitAt x src
+--------------------------------------------------
 
 
 
@@ -112,10 +127,10 @@ module GoL.Backend.Txt where
     (intLst,charLst) = unzip lst
     
     diffIntLst :: [Int]
-    diffIntLst = (toDiffLst . sort) intLst
+    diffIntLst =  (toDiffLst . sort) intLst
 
     slicedBstr :: [B.ByteString]
-    slicedBstr = splitStr bstr diffIntLst
+    slicedBstr = splitStrNoPivot bstr diffIntLst
 
     packedChr :: [B.ByteString]
     packedChr = map B.pack $ transpose [charLst]
@@ -139,7 +154,7 @@ module GoL.Backend.Txt where
       cell_pos = y * x_dim + x
       _chr = case st of
         Alive -> 'X'
-        Dead  -> ' '
+        Dead  -> 'Y'
       
     pair_lst = map getPosCharPair chgLst  
     initBstr = array be
