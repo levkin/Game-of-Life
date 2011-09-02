@@ -20,6 +20,9 @@ import qualified Data.ByteString.Char8 as B
 toCellSt :: [Coord] -> CellStorage
 toCellSt lst = GoL.Definitions.fromList $ [ Cell {coord = x,neighborCnt = 0,lifeCnt = 0} | x <- lst ]
 
+
+
+
 ----------------------------------------------------------------
 fromCellSt :: CellStorage -> [Coord]
 fromCellSt st =  map coord  $ GoL.Definitions.toList st
@@ -185,7 +188,9 @@ initTestBe = GolTextBe {
 -- Play 10 turns of game of life
 playGame = do
   be <- GoL.Backend.IF.init initTestBe (_maxX,_maxY) 
-  let initGameSt = GameState initCellSt be 
+  let initChange = map (\x->(Alive,x)) $ toList initCellSt  
+  new_be <- GoL.Backend.IF.updateSt initChange be
+  let initGameSt = GameState initCellSt new_be
   game turns initGameSt   
 
 --------------------------------------------------
@@ -199,7 +204,10 @@ playGame = do
 --  Debug
 -----------------------------------------------------
 
-
+test1 = do
+  be <- GoL.Backend.IF.init initTestBe (_maxX,_maxY) 
+  let initGameSt = GameState initCellSt be 
+  print $ cellStorage initGameSt
 
 
 

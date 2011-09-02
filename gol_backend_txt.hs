@@ -54,6 +54,9 @@ module GoL.Backend.Txt where
       slice_f jj | (B.null jj) = Nothing
                  | otherwise = Just $ B.splitAt x_dim jj
 
+    l_lngth = length lines
+    lines_with_linenum = [(show x) ++ y | x <- [1..l_lngth] | y <- lines]
+
     h_sep = replicate x_dim '|' 
     v_sep_no_term =  replicate (x_dim*2+1) '-' 
     v_sep = v_sep_no_term ++ "\n"

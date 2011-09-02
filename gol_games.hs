@@ -17,7 +17,7 @@ module GoL.Game where
   data (GoLBackend a) => GameState a = GameState {
     cellStorage :: CellStorage,
     backEnd :: a
-  }
+  } deriving (Show)
 
   
 
